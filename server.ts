@@ -15,7 +15,8 @@ const app = new Application();
 
 app.use(
   oakCors({
-    origin: "http://localhost:3000",
+    // TODO: add the origin of the website
+    origin: "*",
   })
 );
 
@@ -33,6 +34,8 @@ router.use(async (ctx, next) => {
   const ms = Date.now() - start;
   ctx.response.headers.set("X-Response-Time", `${ms}ms`);
 });
+
+router.use("/", (context) => (context.response.body = "Hello World"));
 
 router.post("/download", async (context) => {
   if (!context.request.hasBody) {
