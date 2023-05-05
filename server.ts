@@ -5,6 +5,8 @@ import { oakCors } from "https://deno.land/x/cors/mod.ts";
 import { Application } from "https://deno.land/x/oak/mod.ts";
 import { Router } from "https://deno.land/x/oak@v12.4.0/mod.ts";
 import { encodeUrl } from "https://deno.land/x/oak@v12.4.0/util.ts";
+import { httpErrors } from "https://deno.land/x/oak@v12.4.0/mod.ts";
+
 import {
   getBasicInfo,
   validateURL,
@@ -30,38 +32,35 @@ router.get("/", (context) => (context.response.body = "Hello World"));
 
 router.post("/download", async (context) => {
   if (!context.request.hasBody) {
-    return;
+    throw new httpErrors.BadRequest("URL must be provided");
   }
 
   const result = context.request.body();
 
-  if (result.type === "json") {
-    const value: RequestBody = await result.value; // an object of parsed JSON
-    if (validateURL(value.url)) {
-      try {
-        const videoInfo = await getBasicInfo(value.url);
-        const audio = await ytdl(value.url, {
-          filter: "audioonly",
-        });
-        // Set response headers
-        context.response.status = 200;
-        context.response.type = "audio/mpeg";
-        const disposition = `attachment; filename="${encodeUrl(
-          videoInfo.videoDetails.title
-        )}.mp3"`;
+  if (result.type !== "json") {
+    throw new httpErrors.BadRequest("URL must be provided");
+  }
 
-        context.response.headers.set("Content-Disposition", disposition);
+  const value: RequestBody = await result.value;
 
-        // Pipe the video stream to the response
-        //   return new Response(audio);
-        context.response.body = audio;
-      } catch (error) {
-        console.log(error);
-        context.response.status = 400;
-        context.response.body = "Bad Request";
-        return;
-      }
-    }
+  try {
+    const videoInfo = await getBasicInfo(value.url);
+    const audio = await ytdl(value.url, {
+      filter: "audioonly",
+    });
+    // Set response headers
+    context.response.status = 200;
+    context.response.type = "audio/mpeg";
+    const disposition = `attachment; filename="${encodeUrl(
+      videoInfo.videoDetails.title
+    )}.mp3"`;
+
+    context.response.headers.set("Content-Disposition", disposition);
+
+    // Pipe the video stream to the response
+    context.response.body = audio;
+  } catch (_e) {
+    throw new httpErrors.BadRequest("Invalid YouTube URL");
   }
 });
 
