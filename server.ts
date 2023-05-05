@@ -38,26 +38,29 @@ router.post("/download", async (context) => {
   if (result.type === "json") {
     const value: RequestBody = await result.value; // an object of parsed JSON
     if (validateURL(value.url)) {
-      console.log(value.url);
+      try {
+        const videoInfo = await getBasicInfo(value.url);
+        const audio = await ytdl(value.url, {
+          filter: "audioonly",
+        });
+        // Set response headers
+        context.response.status = 200;
+        context.response.type = "audio/mpeg";
+        const disposition = `attachment; filename="${encodeUrl(
+          videoInfo.videoDetails.title
+        )}.mp3"`;
 
-      // Find the video format with the highest quality
-      const videoInfo = await getBasicInfo(value.url);
-      const audio = await ytdl(value.url, {
-        filter: "audioonly",
-      });
+        context.response.headers.set("Content-Disposition", disposition);
 
-      // Set response headers
-      context.response.status = 200;
-      context.response.type = "audio/mpeg";
-      const disposition = `attachment; filename="${encodeUrl(
-        videoInfo.videoDetails.title
-      )}.mp3"`;
-
-      context.response.headers.set("Content-Disposition", disposition);
-
-      // Pipe the video stream to the response
-      //   return new Response(audio);
-      context.response.body = audio;
+        // Pipe the video stream to the response
+        //   return new Response(audio);
+        context.response.body = audio;
+      } catch (error) {
+        console.log(error);
+        context.response.status = 400;
+        context.response.body = "Bad Request";
+        return;
+      }
     }
   }
 });
