@@ -11,16 +11,14 @@ import {
   ytdl,
 } from "https://deno.land/x/ytdl_core/mod.ts";
 
-const app = new Application();
+const router = new Router();
 
-app.use(
+router.use(
   oakCors({
     // TODO: add the origin of the website
     origin: "*",
   })
 );
-
-const router = new Router();
 
 router.use(async (context, next) => {
   await next();
@@ -70,6 +68,8 @@ router.post("/download", async (context) => {
     }
   }
 });
+
+const app = new Application();
 
 app.use(router.routes());
 app.use(router.allowedMethods());
