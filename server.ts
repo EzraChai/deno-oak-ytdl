@@ -13,13 +13,6 @@ import {
 
 const router = new Router();
 
-router.use(
-  oakCors({
-    // TODO: add the origin of the website
-    origin: "*",
-  })
-);
-
 router.use(async (context, next) => {
   await next();
   const rt = context.response.headers.get("X-Response-Time");
@@ -56,9 +49,9 @@ router.post("/download", async (context) => {
       // Set response headers
       context.response.status = 200;
       context.response.type = "audio/mpeg";
-      const disposition = `attachment; filename*="${encodeUrl(
+      const disposition = `attachment; filename="${encodeUrl(
         videoInfo.videoDetails.title
-      )}".mp3`;
+      )}.mp3"`;
 
       context.response.headers.set("Content-Disposition", disposition);
 
@@ -70,6 +63,14 @@ router.post("/download", async (context) => {
 });
 
 const app = new Application();
+
+app.use(
+  oakCors({
+    // TODO: add the origin of the website
+    origin: "*",
+    exposedHeaders: "Content-Disposition",
+  })
+);
 
 app.use(router.routes());
 app.use(router.allowedMethods());
