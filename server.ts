@@ -35,7 +35,7 @@ router.use(async (ctx, next) => {
   ctx.response.headers.set("X-Response-Time", `${ms}ms`);
 });
 
-router.use("/", (context) => (context.response.body = "Hello World"));
+router.get("/", (context) => (context.response.body = "Hello World"));
 
 router.post("/download", async (context) => {
   if (!context.request.hasBody) {
