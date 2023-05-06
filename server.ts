@@ -57,6 +57,7 @@ router.post("/v2/download", async (context) => {
   const tags = {
     title: basicInfo.videoDetails.title,
     artist: `${basicInfo.videoDetails.author}`,
+    APIC: basicInfo.videoDetails.thumbnails[0].url,
   };
   const blob = new Blob(chunks, { type: "audio/mpeg" });
 
