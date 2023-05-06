@@ -64,6 +64,10 @@ router.post("/v2/download", async (context) => {
 
   nodeID3.write(tags, fileBuffer);
 
+  const disposition = `attachment; filename="${encodeUrl(
+    basicInfo.videoDetails.title
+  )}.mp3"`;
+  context.response.headers.set("Content-Disposition", disposition);
   context.response.status = 200;
   context.response.type = "audio/mpeg";
   context.response.body = fileBuffer;
