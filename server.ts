@@ -44,7 +44,7 @@ router.post("/getInfo", async (context) => {
     context.response.status = 200;
     context.response.body = videoInfo;
   } catch (_e) {
-    throw new httpErrors.BadRequest("Invalid YouTube URL");
+    throw new httpErrors.BadRequest("Invalid YouTube URL.");
   }
 });
 
