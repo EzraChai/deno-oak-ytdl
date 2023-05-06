@@ -54,12 +54,11 @@ router.post("/v2/download", async (context) => {
     title: basicInfo.videoDetails.title,
     artist: `${basicInfo.videoDetails.author}`,
   };
-  // Buffer.from(arrayBuffer[, byteOffset[, length]])
   const blob = new Blob(chunks, { type: "audio/mpeg" });
 
   const fileBuffer = Buffer.from(new Uint8Array(await blob.arrayBuffer()));
 
-  nodeID3.write(tags, fileBuffer);
+  // nodeID3.write(tags, fileBuffer);
 
   context.response.status = 200;
   context.response.type = "audio/mpeg";
