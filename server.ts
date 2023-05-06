@@ -1,14 +1,17 @@
 type RequestBody = {
   url: string;
 };
-import { oakCors } from "https://deno.land/x/cors/mod.ts";
-import { Application } from "https://deno.land/x/oak/mod.ts";
+import { oakCors } from "https://deno.land/x/cors@v1.2.2/mod.ts";
+import { Application } from "https://deno.land/x/oak@v12.4.0/mod.ts";
 import { Router } from "https://deno.land/x/oak@v12.4.0/mod.ts";
 import { encodeUrl } from "https://deno.land/x/oak@v12.4.0/util.ts";
 import { httpErrors } from "https://deno.land/x/oak@v12.4.0/mod.ts";
 import NodeID3 from "npm:node-id3@0.2.6";
 
-import { getBasicInfo, ytdl } from "https://deno.land/x/ytdl_core/mod.ts";
+import {
+  getBasicInfo,
+  ytdl,
+} from "https://deno.land/x/ytdl_core@v0.1.2/mod.ts";
 import { Buffer } from "https://deno.land/std@0.177.0/node/internal/buffer.mjs";
 
 const router = new Router();
@@ -41,19 +44,19 @@ router.post("/v2/download", async (context) => {
     filter: "audioonly",
     quality: "highestaudio",
   });
-  const basicInfo = await getBasicInfo(value.url);
+  // const basicInfo = await getBasicInfo(value.url);
 
   const chunks: Uint8Array[] = [];
 
   for await (const chunk of stream) {
     chunks.push(chunk);
   }
-  const nodeID3 = NodeID3.Promise;
+  // const nodeID3 = NodeID3.Promise;
 
-  const tags = {
-    title: basicInfo.videoDetails.title,
-    artist: `${basicInfo.videoDetails.author}`,
-  };
+  // const tags = {
+  //   title: basicInfo.videoDetails.title,
+  //   artist: `${basicInfo.videoDetails.author}`,
+  // };
   const blob = new Blob(chunks, { type: "audio/mpeg" });
 
   const fileBuffer = Buffer.from(new Uint8Array(await blob.arrayBuffer()));
