@@ -6,7 +6,7 @@ import { Application } from "https://deno.land/x/oak@v12.4.0/mod.ts";
 import { Router } from "https://deno.land/x/oak@v12.4.0/mod.ts";
 import { encodeUrl } from "https://deno.land/x/oak@v12.4.0/util.ts";
 import { httpErrors } from "https://deno.land/x/oak@v12.4.0/mod.ts";
-import NodeID3 from "npm:node-id3@0.2.6";
+// import NodeID3 from "npm:node-id3@0.2.6";
 
 import {
   getBasicInfo,
