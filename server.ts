@@ -69,7 +69,6 @@ router.post("/v2/download", async (context) => {
   };
   const blob = new Blob(chunks, { type: "audio/mpeg" });
 
-  // const fileBuffer = Buffer.from(new Uint8Array(await blob.arrayBuffer()));
   const fileBuffer = Buffer.from(await blob.arrayBuffer());
 
   const newBuffer = await nodeID3.write(tags, fileBuffer);
