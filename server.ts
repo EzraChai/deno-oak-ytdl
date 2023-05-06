@@ -41,45 +41,28 @@ router.post("/v2/download", async (context) => {
 
   const value: RequestBody = await result.value;
 
+  const basicInfo = await getBasicInfo(value.url);
   const stream = await ytdl(value.url, {
     filter: "audioonly",
     quality: "highestaudio",
   });
-  const basicInfo = await getBasicInfo(value.url);
 
   const chunks: Uint8Array[] = [];
 
   for await (const chunk of stream) {
     chunks.push(chunk);
   }
-  const nodeID3 = NodeID3.Promise;
-
-  const data = await fetch(basicInfo.videoDetails.thumbnails[0].url);
-  const image = await data.blob();
-  console.log(image);
-
-  const tags = {
-    title: basicInfo.videoDetails.title,
-    artist: basicInfo.videoDetails.author.name,
-    date: basicInfo.videoDetails.publishDate,
-    // image: {
-    //   mime: "image/jpeg",
-    //   imageBuffer: Buffer.from(await image.arrayBuffer()),
-    // },
-  };
-  const blob = new Blob(chunks, { type: "audio/mpeg" });
-
-  const fileBuffer = Buffer.from(await blob.arrayBuffer());
-
-  const newBuffer = await nodeID3.write(tags, fileBuffer);
+  const blob = new Blob(chunks);
 
   const disposition = `attachment; filename="${encodeUrl(
     basicInfo.videoDetails.title
   )}.mp3"`;
   context.response.headers.set("Content-Disposition", disposition);
+  context.response.headers.set("Content-Length", blob.size.toString());
+  context.response.headers.set("Content-Transfer-Encoding", "binary");
   context.response.status = 200;
   context.response.type = "audio/mpeg";
-  context.response.body = newBuffer;
+  context.response.body = blob;
 });
 
 router.post("/v1/download", async (context) => {
@@ -123,7 +106,11 @@ app.use(
   oakCors({
     // TODO: add the origin of the website
     origin: ["https://download-song.vercel.app", "http://localhost:3000"],
-    exposedHeaders: "Content-Disposition",
+    exposedHeaders: [
+      "Content-Disposition",
+      "Content-Length",
+      "Content-Transfer-Encoding",
+    ],
   })
 );
 
