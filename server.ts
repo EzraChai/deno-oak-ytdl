@@ -54,16 +54,25 @@ router.post("/v2/download", async (context) => {
   }
   const nodeID3 = NodeID3.Promise;
 
+  const data = await fetch(basicInfo.videoDetails.thumbnails[0].url);
+  const image = await data.blob();
+  console.log(image);
+
   const tags = {
     title: basicInfo.videoDetails.title,
-    artist: `${basicInfo.videoDetails.author}`,
-    APIC: basicInfo.videoDetails.thumbnails[0].url,
+    artist: basicInfo.videoDetails.author.name,
+    date: basicInfo.videoDetails.publishDate,
+    // image: {
+    //   mime: "image/jpeg",
+    //   imageBuffer: Buffer.from(await image.arrayBuffer()),
+    // },
   };
   const blob = new Blob(chunks, { type: "audio/mpeg" });
 
-  const fileBuffer = Buffer.from(new Uint8Array(await blob.arrayBuffer()));
+  // const fileBuffer = Buffer.from(new Uint8Array(await blob.arrayBuffer()));
+  const fileBuffer = Buffer.from(await blob.arrayBuffer());
 
-  nodeID3.write(tags, fileBuffer);
+  const newBuffer = await nodeID3.write(tags, fileBuffer);
 
   const disposition = `attachment; filename="${encodeUrl(
     basicInfo.videoDetails.title
@@ -71,7 +80,7 @@ router.post("/v2/download", async (context) => {
   context.response.headers.set("Content-Disposition", disposition);
   context.response.status = 200;
   context.response.type = "audio/mpeg";
-  context.response.body = fileBuffer;
+  context.response.body = newBuffer;
 });
 
 router.post("/v1/download", async (context) => {
