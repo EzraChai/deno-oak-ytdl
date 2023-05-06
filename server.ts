@@ -26,6 +26,28 @@ router.use(async (ctx, next) => {
 
 router.get("/", (context) => (context.response.body = "Hello World"));
 
+router.post("/getInfo", async (context) => {
+  if (!context.request.hasBody) {
+    throw new httpErrors.BadRequest("URL must be provided");
+  }
+
+  const result = context.request.body();
+
+  if (result.type !== "json") {
+    throw new httpErrors.BadRequest("URL must be provided");
+  }
+
+  const value: RequestBody = await result.value;
+
+  try {
+    const videoInfo = await getBasicInfo(value.url);
+    context.response.status = 200;
+    context.response.body = videoInfo;
+  } catch (_e) {
+    throw new httpErrors.BadRequest("Invalid YouTube URL");
+  }
+});
+
 router.post("/download", async (context) => {
   if (!context.request.hasBody) {
     throw new httpErrors.BadRequest("URL must be provided");
