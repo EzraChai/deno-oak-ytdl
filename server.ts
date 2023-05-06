@@ -88,7 +88,7 @@ const app = new Application();
 app.use(
   oakCors({
     // TODO: add the origin of the website
-    origin: ["https://download-song.vercel.app"],
+    origin: ["https://download-song.vercel.app", "http://localhost:3000"],
     exposedHeaders: "Content-Disposition",
   })
 );
