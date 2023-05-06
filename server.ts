@@ -61,6 +61,7 @@ router.post("/v2/download", async (context) => {
 
   nodeID3.write(tags, fileBuffer);
 
+  context.response.status = 200;
   context.response.type = "audio/mpeg";
   context.response.body = fileBuffer;
 });
