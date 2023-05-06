@@ -6,8 +6,10 @@ import { Application } from "https://deno.land/x/oak/mod.ts";
 import { Router } from "https://deno.land/x/oak@v12.4.0/mod.ts";
 import { encodeUrl } from "https://deno.land/x/oak@v12.4.0/util.ts";
 import { httpErrors } from "https://deno.land/x/oak@v12.4.0/mod.ts";
+import NodeID3 from "npm:node-id3@0.2.6";
 
 import { getBasicInfo, ytdl } from "https://deno.land/x/ytdl_core/mod.ts";
+import { Buffer } from "https://deno.land/std@0.177.0/node/internal/buffer.mjs";
 
 const router = new Router();
 
@@ -26,11 +28,7 @@ router.use(async (ctx, next) => {
 
 router.get("/", (context) => (context.response.body = "Hello World"));
 
-router.post("/getInfo", async (context) => {
-  if (!context.request.hasBody) {
-    throw new httpErrors.BadRequest("URL must be provided");
-  }
-
+router.post("/v2/download", async (context) => {
   const result = context.request.body();
 
   if (result.type !== "json") {
@@ -39,13 +37,32 @@ router.post("/getInfo", async (context) => {
 
   const value: RequestBody = await result.value;
 
-  try {
-    const videoInfo = await getBasicInfo(value.url);
-    context.response.status = 200;
-    context.response.body = videoInfo;
-  } catch (_e) {
-    throw new httpErrors.BadRequest("Invalid YouTube URL.");
+  const stream = await ytdl(value.url, {
+    filter: "audioonly",
+    quality: "highestaudio",
+  });
+  const basicInfo = await getBasicInfo(value.url);
+
+  const chunks: Uint8Array[] = [];
+
+  for await (const chunk of stream) {
+    chunks.push(chunk);
   }
+  const nodeID3 = NodeID3.Promise;
+
+  const tags = {
+    title: basicInfo.videoDetails.title,
+    artist: `${basicInfo.videoDetails.author}`,
+  };
+  // Buffer.from(arrayBuffer[, byteOffset[, length]])
+  const blob = new Blob(chunks, { type: "audio/mpeg" });
+
+  const fileBuffer = Buffer.from(new Uint8Array(await blob.arrayBuffer()));
+
+  nodeID3.write(tags, fileBuffer);
+
+  context.response.type = "audio/mpeg";
+  context.response.body = fileBuffer;
 });
 
 router.post("/download", async (context) => {
