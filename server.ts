@@ -73,7 +73,7 @@ router.post("/v2/download", async (context) => {
   context.response.body = fileBuffer;
 });
 
-router.post("/download", async (context) => {
+router.post("/v1/download", async (context) => {
   if (!context.request.hasBody) {
     throw new httpErrors.BadRequest("URL must be provided");
   }
