@@ -7,7 +7,7 @@ import { Application } from "https://deno.land/x/oak@v12.4.0/mod.ts";
 import { Router } from "https://deno.land/x/oak@v12.4.0/mod.ts";
 import { encodeUrl } from "https://deno.land/x/oak@v12.4.0/util.ts";
 import { httpErrors } from "https://deno.land/x/oak@v12.4.0/mod.ts";
-import NodeID3 from "https://esm.sh/node-id3@0.2.6";
+import NodeID3tag from "https://esm.sh/node-id3tag@0.9.8";
 
 import {
   getBasicInfo,
@@ -52,7 +52,7 @@ router.post("/v2/download", async (context) => {
   for await (const chunk of stream) {
     chunks.push(chunk);
   }
-  const nodeID3 = NodeID3.Promise;
+  // const nodeID3 = NodeID3.Promise;
 
   const data = await fetch(basicInfo.videoDetails.thumbnails[0].url);
   const image = await data.blob();
@@ -69,9 +69,20 @@ router.post("/v2/download", async (context) => {
   };
   const blob = new Blob(chunks, { type: "audio/mpeg" });
 
-  const fileBuffer = Buffer.from(await blob.arrayBuffer());
+  let fileBuffer = Buffer.from(await blob.arrayBuffer());
 
-  const newBuffer = await nodeID3.write(tags, fileBuffer);
+  await NodeID3tag.write(
+    tags,
+    fileBuffer,
+    function (err: Error, buffer: Buffer) {
+      if (err) {
+        return;
+      }
+      fileBuffer = buffer;
+    }
+  );
+
+  // const newBuffer = await nodeID3.write(tags, fileBuffer);
 
   const disposition = `attachment; filename="${encodeUrl(
     basicInfo.videoDetails.title
@@ -79,7 +90,7 @@ router.post("/v2/download", async (context) => {
   context.response.headers.set("Content-Disposition", disposition);
   context.response.status = 200;
   context.response.type = "audio/mpeg";
-  context.response.body = newBuffer;
+  context.response.body = fileBuffer;
 });
 
 router.post("/v1/download", async (context) => {
