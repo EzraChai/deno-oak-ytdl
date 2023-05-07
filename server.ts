@@ -7,13 +7,11 @@ import { Application } from "https://deno.land/x/oak@v12.4.0/mod.ts";
 import { Router } from "https://deno.land/x/oak@v12.4.0/mod.ts";
 import { encodeUrl } from "https://deno.land/x/oak@v12.4.0/util.ts";
 import { httpErrors } from "https://deno.land/x/oak@v12.4.0/mod.ts";
-import NodeID3 from "https://esm.sh/node-id3@0.2.6";
 
 import {
   getBasicInfo,
   ytdl,
 } from "https://deno.land/x/ytdl_core@v0.1.2/mod.ts";
-import { Buffer } from "https://deno.land/std@0.177.0/node/internal/buffer.mjs";
 
 const router = new Router();
 
@@ -43,26 +41,18 @@ router.post("/v2/download", async (context) => {
 
   const basicInfo = await getBasicInfo(value.url);
   const stream = await ytdl(value.url, {
-    filter: "audioonly",
     quality: "highestaudio",
   });
-
-  const chunks: Uint8Array[] = [];
-
-  for await (const chunk of stream) {
-    chunks.push(chunk);
-  }
-  const blob = new Blob(chunks);
 
   const disposition = `attachment; filename="${encodeUrl(
     basicInfo.videoDetails.title
   )}.mp3"`;
   context.response.headers.set("Content-Disposition", disposition);
-  context.response.headers.set("Content-Length", blob.size.toString());
+  // context.response.headers.set("Content-Length", blob.size.toString());
   context.response.headers.set("Content-Transfer-Encoding", "binary");
   context.response.status = 200;
   context.response.type = "audio/mpeg";
-  context.response.body = blob;
+  context.response.body = stream;
 });
 
 router.post("/v1/download", async (context) => {
@@ -104,7 +94,6 @@ const app = new Application();
 
 app.use(
   oakCors({
-    // TODO: add the origin of the website
     origin: ["https://download-song.vercel.app", "http://localhost:3000"],
     exposedHeaders: [
       "Content-Disposition",
